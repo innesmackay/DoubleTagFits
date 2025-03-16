@@ -1,0 +1,40 @@
+status 0
+covQual 3
+minNLL -5835.32
+edm 3.2576e-06
+
+* Floated parameters:
+n_comb_vs_tag 25.5741
+n_correlated_qqbar 60.6084
+n_flat_qqbar 303.714
+n_kpi_vs_comb 33.1811
+n_kpi_vs_kpipi0 82.5539
+n_signal 156.364
+qqbar_kpi_exponent -2.73574
+qqbar_mean 3.809
+qqbar_sigma 0.023889
+qqbar_tag_exponent -2.56593
+
+* Floated parameter errors:
+n_comb_vs_tag_errLo -8.96724
+n_comb_vs_tag_errHi 8.96724
+n_correlated_qqbar_errLo -13.7243
+n_correlated_qqbar_errHi 13.7243
+n_flat_qqbar_errLo -23.7504
+n_flat_qqbar_errHi 23.7504
+n_kpi_vs_comb_errLo -28.748
+n_kpi_vs_comb_errHi 28.748
+n_kpi_vs_kpipi0_errLo -24.6292
+n_kpi_vs_kpipi0_errHi 24.6292
+n_signal_errLo -14.2407
+n_signal_errHi 14.2407
+qqbar_kpi_exponent_errLo -0.763674
+qqbar_kpi_exponent_errHi 0.763674
+qqbar_mean_errLo -0.00568859
+qqbar_mean_errHi 0.00568859
+qqbar_sigma_errLo -0.00460031
+qqbar_sigma_errHi 0.00460031
+qqbar_tag_exponent_errLo -1.16468
+qqbar_tag_exponent_errHi 1.16468
+
+* Constant parameters

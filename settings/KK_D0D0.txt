@@ -1,0 +1,30 @@
+* INITIAL
+tag KK
+signal KPi
+prod D0D0
+debug true
+
+* RANGE
+m_tag_low 1.70
+m_tag_high 1.92
+m_sig_low 1.73
+m_sig_high 2.06
+
+* DATA
+sample_signal_mc xtrue
+sampling_frac 0.5
+weight_mc true
+
+* FIT
+components new_settings/components/KK_D0D0.txt
+smear_signal xtrue
+kde_bkgs true
+kpi_expo_qqbar true
+tag_expo_qqbar true
+
+* starting_qqbar_mean 3.8
+* kpi_vs_kpipi0_rate 0.525
+
+* PLOT
+nbins 40
+pulls xtrue
