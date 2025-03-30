@@ -1,0 +1,31 @@
+* INITIALISE
+tag KSPiPi
+signal KPi
+prod ALL
+debug true
+
+* RANGES
+m_tag_low 1.73
+m_tag_high 2.06
+m_sig_low 1.73
+m_sig_high 2.06 
+
+* DATA
+sample_signal_mc true
+sampling_frac 1
+weight_mc xtrue
+
+* FIT
+D0D0_settings settings/KSPiPi_D0D0.txt
+DST0D0_g_settings settings/KSPiPi_DST0D0_g.txt
+DST0D0_pi_settings settings/KSPiPi_DST0D0_pi.txt
+DST0DST0_even_settings settings/KSPiPi_DST0DST0_even.txt
+DST0DST0_odd_settings settings/KSPiPi_DST0DST0_odd.txt
+
+* PLOT
+nbins 25
+pulls xtrue
+
+Yi_strategy default * float, float_by_C
+shared_slopes true
+smear_signal true

@@ -2,8 +2,8 @@
 #define VARIABLES_H
 
 #include "Settings.hpp"
-#include "Log.hpp"
 #include "Definitions.hpp"
+#include "Inputs.hpp"
 
 #include "RooRealVar.h"
 #include "RooArgList.h"
@@ -19,6 +19,16 @@ private:
     * Map of reweighting factors for each tag
     */
     std::map<TString, double> m_reweighting_factors = { {"KK", 0.408/0.394}, {"PiPi", 0.1454/0.140}, {"KSPi0", 1.24/1.22}, {"PiPiPi0", 1.49/2.15}, {"KPi", 3.947/3.89}, {"KSPiPi", 1} };
+
+    /**
+     * Prename for observables
+    */
+    TString m_prename;
+
+    /**
+     * Settings class
+    */
+    Settings m_settings;
 
 public:
     /**
@@ -88,6 +98,42 @@ public:
     RooArgList signal_mc_vars;
     RooArgList bkg_mc_vars;
     RooArgList weight_vars;
+    RooArgList minos_vars;
+
+    /**
+     * KSpipi hadronic parameters
+    */
+    std::map<int, RooRealVar*> ci_vars;
+    std::map<int, RooRealVar*> si_vars;
+    std::map<int, RooRealVar*> Ki_vars;
+
+    /**
+     * Mixing parameters
+    */
+    RooRealVar* xD;
+    RooRealVar* yD;
+
+    /**
+     * KSpipi observables
+    */
+    RooRealVar* rCosDelta;
+    RooRealVar* rSinDelta;
+
+    /**
+     * KSpipi integrated yields
+    */
+    std::map<std::string, RooRealVar*> integrated_N;
+
+    /**
+     * KSpipi binned yields
+    */
+    std::map<std::string, std::map<int, RooFormulaVar*>> Ni;
+    std::map<std::string, std::map<int, RooAbsArg*>> Yi;
+
+    /**
+     * C-values per production mechanism
+    */
+    std::map<std::string, RooRealVar*> C_vars;
 
     /**
     * Empty constructor function
@@ -102,6 +148,7 @@ public:
 
         // Name of tag
         TString tag = s.getT("tag");
+        m_settings = s;
 
         // General
         m_kpi = new RooRealVar("KPi_mInv", "", s.getD("m_sig_low"),  s.getD("m_sig_high"));
@@ -181,44 +228,80 @@ public:
                 cats->defineType(Definitions::ProdBinLabel(prod, bin).c_str());
             }
         }
+
+        // Ki, ci, si variables
+        for (auto bin : Definitions::DP_BINS){
+            ci_vars[bin] = new RooRealVar(("c" + std::to_string(bin)).c_str(), "", Inputs::ci[abs(bin)]);
+            ci_vars[bin]->setConstant(true);
+
+            double si_val = (bin < 0) ? -1*Inputs::si[abs(bin)] : Inputs::si[abs(bin)];
+            si_vars[bin] = new RooRealVar(("s" + std::to_string(bin)).c_str(), "", si_val);
+            si_vars[bin]->setConstant(true);
+
+            Ki_vars[bin] = new RooRealVar(("K" + std::to_string(bin)).c_str(), "", Inputs::Ki[bin]);
+            Ki_vars[bin]->setConstant(true);
+        }
+
+        // Fixed constants
+        xD = new RooRealVar("xD", "", Inputs::XMIX);
+        xD->setConstant(true);
+        yD = new RooRealVar("yD", "", Inputs::YMIX);
+        yD->setConstant(true);
+
+        // KSpipi observables
+        m_prename = (s.key_exists("prename")) ? s.getT("prename") : "";
+        rCosDelta = new RooRealVar(m_prename + "rCosDelta", "", -0.06, -0.15, 0.15);
+        rSinDelta = new RooRealVar(m_prename + "rSinDelta", "", -0.01, -0.15, 0.15);
+
+        // Integrated yields
+        integrated_N["D0D0"] = new RooRealVar("Ntot_D0D0", "", 2520, 1e3, 20e3);
+        integrated_N["DST0D0_g"] = new RooRealVar("Ntot_DST0D0_g", "", 4478, 2e3, 50e3);
+        integrated_N["DST0D0_pi"] = new RooRealVar("Ntot_DST0D0_pi", "", 8492, 5e3, 75e3);
+        integrated_N["DST0DST0_even"] = new RooRealVar("Ntot_DST0DST0_even", "", 9317, 5e3, 75e3);
+        integrated_N["DST0DST0_odd"] = new RooRealVar("Ntot_DST0DST0_odd", "", 11505, 7e3, 85e3);
+
+        // C-values
+        C_vars["D0D0"] = new RooRealVar("C_D0D0", "", -1);
+        C_vars["DST0D0_g"] = new RooRealVar("C_DST0D0_g", "", 1);
+        C_vars["DST0D0_pi"] = new RooRealVar("C_DST0D0_pi", "", -1);
+        C_vars["DST0DST0_even"] = new RooRealVar("C_DST0DST0_even", "", 1);
+        C_vars["DST0DST0_odd"] = new RooRealVar("C_DST0DST0_odd", "", -1);
+        C_vars["EVEN"] = new RooRealVar("C_EVEN", "", 1);
+        C_vars["ODD"] = new RooRealVar("C_ODD", "", -1);
+        for (auto v: C_vars) v.second->setConstant(true);
+
+        // Initilise binned yields
+        this->InitialiseYi();
+        this->InitialiseNi();
+
+        // Set MINOS variables
+        minos_vars.add(RooArgList(*rCosDelta, *rSinDelta, *integrated_N["D0D0"], *integrated_N["DST0D0_g"], *integrated_N["DST0D0_pi"], *integrated_N["DST0DST0_even"], *integrated_N["DST0DST0_odd"]));
+
+    }
+
+    /** Set Yi to be floating parameters */
+    void FloatingYi();
+
+    /** Use rCosDelta and rSinDelta to define the Yi */
+    void DefaultYi();
+
+    /** Let the Yi to float by C-value */
+    void FloatingByC();
+
+    /** Define N_Integrated * Yi */
+    std::map<std::string, std::map<int, RooFormulaVar*>> TotalNi();
+
+    /** Initialise floating yield in each category */
+    void InitialiseNi();
+
+    /** Initalise the Yi */
+    void InitialiseYi(){
+        if (m_settings.get("Yi_strategy") == "float") FloatingYi();
+        else if (m_settings.get("Yi_strategy") == "float_by_C") FloatingByC();
+        else DefaultYi();
+        return;
     }
 
 };
 
 #endif //  Variables_H
-
-
-/*
-    void InitialiseCategories();
-    RooCategory* GetCategories(){ return m_categories; }
-    void SetCategories(RooCategory* cat){ m_categories = cat; }
-    void SetDebug(bool debug){ m_debug = debug; }
-    void InitialiseCiSiKi();
-    RooRealVar* GetCiVar(int bin){ return m_ci_vars[bin]; }
-    RooRealVar* GetSiVar(int bin){ return m_si_vars[bin]; }
-    RooRealVar* GetKiVar(int bin){ return m_Ki_vars[bin]; }
-    void InitialiseMixingVariables();
-    RooRealVar* GetXD(){ return m_xMix; }
-    RooRealVar* GetYD(){ return m_yMix; }
-    void InitialiseObservables(double rcos_start=-0.05, double rsin_start=0, TString prename="");
-    RooRealVar* Get_rCosDelta(){ return m_rKpi_cos_deltaKpi; }
-    RooRealVar* Get_rSinDelta(){ return m_rKpi_sin_deltaKpi; }
-    void InitialiseYi();
-    RooAbsArg* GetYiVar(std::string key, int bin){ return m_Yi_vars[key][bin]; }
-    std::map<std::string, std::map<int, RooAbsArg*>> GetYi(){return m_Yi_vars; }
-    void InitialiseTotalYields();
-    RooRealVar* GetTotalYield(TString prod){ return m_total_yields[prod]; }
-    void InitialiseNi(TString prename="");
-    RooFormulaVar* GetFoldedYield(TString prod, int bin){ return m_folded_Ni[prod][bin]; }
-    void ResetCiSi(std::string inputs_file){
-        m_log.info("Changin the ci and si inputs ...");
-        m_inputs.SetNewCi(inputs_file);
-        m_inputs.SetNewSi(inputs_file);
-        return;
-    }
-    void ResetKi(std::string inputs_file){
-        m_log.info("Changing the Ki inputs ...");
-        m_inputs.SetNewKi(inputs_file);
-        return;
-    }
-*/

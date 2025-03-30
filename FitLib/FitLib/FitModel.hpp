@@ -33,9 +33,8 @@ private:
     /* PDF prename */
     TString m_prename = "";
 
-    /* Signal shapes */
-    RooAbsPdf* kpi_signal_shape;
-    RooAbsPdf* tag_signal_shape;
+    /* Category name (for binned fits) */
+    std::string m_cat_name;
 
 public:
     /**
@@ -45,15 +44,14 @@ public:
     * @param Data Data class
     * @param debug boolean
     */
-    FitModel(Settings settings, Variables* vars, Data* data, bool debug = false){
+    FitModel(Settings settings, Variables* vars, Data* data, bool debug = false, std::string cat_name = ""){
         m_settings = settings;
         m_vars = vars;
         m_data = data;
         m_debug = debug;
         if (m_settings.key_exists("prename")) m_prename = m_settings.getT("prename");
-        ReadComponents();
-        MakePDF();
         m_log = Log("FitModel");
+        m_cat_name = cat_name;
     }
 
     /**
@@ -96,6 +94,8 @@ public:
             else if (c.first == "flat_qqbar") AddComb();
             else if (c.first == "kpi_vs_kpipi0") AddKPiVsKPiPi0();
             else if (c.first == "correlated_qqbar") AddCorrelatedQQBar();
+            else if (c.first == "dstpdstm") AddDSTpDSTm();
+            else if (c.first == "dstpdm") AddDSTpDm();
             //else if (c.first == "kpi_vs_kpi") AddKPiVsKPiComponent();
         }
         pdf = std::make_unique<RooAddPdf>(m_prename + "pdf", "", component_pdfs, component_yields);
@@ -112,13 +112,27 @@ public:
     void AddComb();
     void AddKPiVsKPiPi0();
     void AddCorrelatedQQBar();
+    void AddDSTpDSTm();
+    void AddDSTpDm();
     // void AddKPiVsKPiComponent();
 
-    /*
-    void SetFreePars(Settings fitResults);
-    void ResetPDF();
-    void SetYield(TString name, double n){ RooRealVar* nVar = (RooRealVar*) m_yields.find(name.Data()); nVar->setVal(n); nVar->setConstant(1); }
+    /**
+     * Parameters shared between DP bins
     */
+    // Signal shape
+    RooAbsPdf* signal_shape = nullptr;
+    RooAbsPdf* kpi_signal_shape = nullptr;
+    RooAbsPdf* tag_signal_shape = nullptr;
+
+    // Comb. functions
+    RooAbsPdf* kpi_vs_comb_shape = nullptr;
+    RooAbsPdf* comb_vs_tag_shape = nullptr;
+
+    // Correlated mean
+    RooAbsPdf* qqbar_shape = nullptr;
+
+    // DSTpDm shape
+    RooAbsPdf* dstpdm_shape = nullptr;
 
 };
 

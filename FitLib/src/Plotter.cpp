@@ -80,10 +80,14 @@ RooPlot* Plotter::PlotPulls(RooPlot* f, RooRealVar* var){
 }
 
 
-void Plotter::PlotProjection(RooPlot* frame, bool filled, int nbins){
+void Plotter::PlotProjection(RooPlot* frame, bool filled, int nbins, std::string cat_name){
 
     // Plot data and PDF
-    m_dt->data->plotOn(frame, RooFit::LineColor(kBlack), RooFit::Name("Data"), RooFit::Binning(nbins));
+    RooDataSet* d;
+    if (cat_name != "") d = (RooDataSet*) m_dt->data->reduce(("(kspipi_catz==kspipi_catz::" + cat_name + ")").c_str());
+    else d = m_dt->data.get();
+    d->Print("v");
+    d->plotOn(frame, RooFit::LineColor(kBlack), RooFit::Name("Data"), RooFit::Binning(nbins));    
     m_fm->pdf->plotOn(frame, RooFit::LineColor(kRed), RooFit::Name("Fit"), RooFit::LineWidth(1.));
 
     // Bkgs
@@ -133,15 +137,16 @@ void Plotter::PlotProjection(RooPlot* frame, bool filled, int nbins){
                       );
 
     // Data/PDF again
-    m_dt->data->plotOn(frame, RooFit::LineColor(kBlack), RooFit::Name("Data"), RooFit::Binning(nbins));
+    d->plotOn(frame, RooFit::LineColor(kBlack), RooFit::Name("Data"), RooFit::Binning(nbins));    
     m_fm->pdf->plotOn(frame, RooFit::LineColor(kRed), RooFit::Name("Fit"), RooFit::LineWidth(1));
-    m_dt->data->plotOn(frame, RooFit::LineColor(kBlack), RooFit::Name("Data"), RooFit::Binning(nbins));
+    d->plotOn(frame, RooFit::LineColor(kBlack), RooFit::Name("Data"), RooFit::Binning(nbins)); 
+    delete d;
 
     return;
 
 }
 
-void Plotter::Plot(bool log, bool filled, bool pulls){
+void Plotter::Plot(bool log, bool filled, bool pulls, std::string cat_name){
 
     // Create output filename
     TString prename = "";
@@ -187,10 +192,10 @@ void Plotter::Plot(bool log, bool filled, bool pulls){
     // Plot projections
     m_log.info("Plotting data and PDF on Kpi frame");
     kpi_plot_pad.cd();
-    PlotProjection(kpi_frame, filled, nbins);
+    PlotProjection(kpi_frame, filled, nbins, cat_name);
     kpi_frame->Draw();
     tag_plot_pad.cd();
-    PlotProjection(tag_frame, filled, nbins);
+    PlotProjection(tag_frame, filled, nbins, cat_name);
     tag_frame->Draw();
 
     // Plot pulls

@@ -28,6 +28,16 @@ namespace DataUtils {
     */
     void SaveDatasetToFile(RooDataSet dataset, TString filename, TString treename);
 
+    /**
+     * Delete pointers in a map to remove memory leaks
+     * @param m map of strings and RooDataSets
+    */
+    inline void ClearMap(std::map<std::string, RooDataSet*> m){
+        for (auto pair: m){ delete pair.second; }
+        m.clear();
+        return;
+    }
+
 }
 
 #endif //  DataUtils_H

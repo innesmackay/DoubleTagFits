@@ -21,7 +21,7 @@ std::unique_ptr<TChain> Data::LoadMCChain(TString sample, bool bkg_prod, bool bk
 }
 
 
-void Data::LoadData(){
+std::unique_ptr<RooDataSet> Data::LoadData(){
 
     if (m_debug) m_log.info("Loading in the data sample");
 
@@ -39,8 +39,8 @@ void Data::LoadData(){
     // Apply selection criteria
     std::unique_ptr<TTree> data_cut;
     if (m_apply_cuts){
-        TString full_cut = m_selection.ProdCut(m_prod); // Production mechanism
-        if (m_selection.TagCut(m_tag) != "") full_cut += " & " + m_selection.TagCut(m_tag); // Tag
+        TString full_cut = Selection::ProdCut(m_prod, m_tag); // Production mechanism
+        if (Selection::TagCut(m_tag) != "") full_cut += " & " + Selection::TagCut(m_tag); // Tag
         data_cut.reset(data_chain.CopyTree(full_cut));
         if (m_debug){
             m_log.debug("Applying cut to the data: " + full_cut);
@@ -53,10 +53,10 @@ void Data::LoadData(){
     }
 
     // Load into a RooDataSet
-    data = std::make_unique<RooDataSet>("data", "", m_vars->data_vars, RooFit::Import(*data_cut));
-    if (m_debug) data->Print("v");
+    std::unique_ptr<RooDataSet> ds = std::make_unique<RooDataSet>("data", "", m_vars->data_vars, RooFit::Import(*data_cut));
+    if (m_debug) ds->Print("v");
 
-    return;
+    return ds;
 }
 
 
@@ -69,8 +69,9 @@ std::unique_ptr<RooDataSet> Data::LoadMCSample(TString sample, bool bkg_prod, bo
     // Apply selection criteria
     std::unique_ptr<TTree> mc_cut;
     if (m_apply_cuts){
-        TString full_cut = m_selection.ProdCut(m_prod); // production mechanism
-        if (m_selection.TagCut(m_tag) != "") full_cut += " & " + m_selection.TagCut(m_tag); // tag
+        TString full_cut = Selection::ProdCut(m_prod, m_tag); // production mechanism
+        std::cout << full_cut << std::endl;
+        if (Selection::TagCut(m_tag) != "") full_cut += " & " + Selection::TagCut(m_tag); // tag
         mc_cut.reset(mc_chain->CopyTree(full_cut));
         if (m_debug){
             m_log.debug("Applying cut to the MC sample: " + full_cut);

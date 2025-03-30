@@ -1,12 +1,11 @@
 #ifndef SELECTION_H
 #define SELECTION_H
 
-#include "Settings.hpp"
 #include "Log.hpp"
 
 #include "TString.h"
 
-namespace SelectionConstants {
+namespace Selection {
 
     // DD from D*D & D*D*
     const double DD_EMISS_MIN = -0.03;
@@ -64,35 +63,14 @@ namespace SelectionConstants {
     const double KSPIPI_KS_MINV_MIN = 0.485;
     const double KSPIPI_KS_MINV_MAX = 0.510;
 
-}
-
-class Selection {
-
-public:
-
-    Selection(Settings settings){
-        _settings = settings;
-        _tag = _settings.getT("tag");
-        _prod = _settings.getT("prod");
-    };
-
-    Selection(TString tag, TString prod){
-        _tag = tag;
-        _prod = prod;
-    }
-
-    Selection(){}
-
-    ~Selection(){}
-
-    TString TagCut(TString tag){
+    inline TString TagCut(TString tag){
         std::map<TString, TString> cuts = {
-            {"KSPi0", "(" + _tag + "_ks_flightSig>" + Form("%f", SelectionConstants::KSPI0_FDS_MIN) + ") & (" + _tag + "_ks_flightSig<" + Form("%f", SelectionConstants::KSPI0_FDS_MAX) + ")" },
-            {"PiPiPi0", "(" + _tag + "_ks_flightSig>" + Form("%f", SelectionConstants::PIPIPI0_FDS_MIN) + ") & (" + _tag + "_ks_flightSig<" + Form("%f", SelectionConstants::PIPIPI0_FDS_MAX) + ")" },
+            {"KSPi0", "(" + tag + "_ks_flightSig>" + Form("%f", KSPI0_FDS_MIN) + ") & (" + tag + "_ks_flightSig<" + Form("%f", KSPI0_FDS_MAX) + ")" },
+            {"PiPiPi0", "(" + tag + "_ks_flightSig>" + Form("%f", PIPIPI0_FDS_MIN) + ") & (" + tag + "_ks_flightSig<" + Form("%f", PIPIPI0_FDS_MAX) + ")" },
             {
-              "KSPiPi", "(" + _tag + "_ks_flightSig>" + Form("%f", SelectionConstants::KSPIPI_FDS_MIN) + ") & (" + _tag + "_ks_flightSig<" + Form("%f", SelectionConstants::KSPIPI_FDS_MAX) + ") & " +
-                        "(" + _tag + "_ks_mInv>" + Form("%f", SelectionConstants::KSPIPI_KS_MINV_MIN) + ") & (" + _tag + "_ks_mInv<" + Form("%f", SelectionConstants::KSPIPI_KS_MINV_MAX) + ") & " +
-                        "(" + _tag + "_vs_KPi_bin!=0)"
+              "KSPiPi", "(" + tag + "_ks_flightSig>" + Form("%f", KSPIPI_FDS_MIN) + ") & (" + tag + "_ks_flightSig<" + Form("%f", KSPIPI_FDS_MAX) + ") & " +
+                        "(" + tag + "_ks_mInv>" + Form("%f", KSPIPI_KS_MINV_MIN) + ") & (" + tag + "_ks_mInv<" + Form("%f", KSPIPI_KS_MINV_MAX) + ") & " +
+                        "(" + tag + "_vs_KPi_bin!=0)"
             },
             {"KK", ""},
             {"PiPi", ""},
@@ -101,61 +79,46 @@ public:
         return cuts[tag];
     }
 
-    TString ProdCut(TString prod, bool smeared=false){
-
-        TString descriptor = _tag;
-        if (smeared){ descriptor = "Smeared_" + _tag; }
+    inline TString ProdCut(TString prod, TString descriptor){
 
         std::map<TString, TString> cuts = {
-            {"D0D0", "(" + descriptor + "_vs_KPi_EMiss>" + Form("%f", SelectionConstants::DD_EMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_EMiss<" + Form("%f", SelectionConstants::DD_EMISS_MAX) + ")" },
+            {"D0D0", "(" + descriptor + "_vs_KPi_EMiss>" + Form("%f", DD_EMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_EMiss<" + Form("%f", DD_EMISS_MAX) + ")" },
             {
-                "DST0D0_g", "(" + descriptor + "_vs_KPi_EMiss>" + Form("%f", SelectionConstants::OTHER_EMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_EMiss<" + Form("%f", SelectionConstants::OTHER_EMISS_MAX) + ") & " +
-                            "(" + descriptor + "_vs_KPi_BestMRec>" + Form("%f", SelectionConstants::DSTD_MREC_MIN) + ") & " + "(" + descriptor + "_vs_KPi_BestMRec<" + Form("%f", SelectionConstants::DSTD_MREC_MAX) + ") & " +
-                            "(" + descriptor + "_vs_KPi_MMiss2>" + Form("%f", SelectionConstants::DSTDG_MMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_MMiss2<" + Form("%f", SelectionConstants::DSTDG_MMISS_MAX) + ")"
+                "DST0D0_g", "(" + descriptor + "_vs_KPi_EMiss>" + Form("%f", OTHER_EMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_EMiss<" + Form("%f", OTHER_EMISS_MAX) + ") & " +
+                            "(" + descriptor + "_vs_KPi_BestMRec>" + Form("%f", DSTD_MREC_MIN) + ") & " + "(" + descriptor + "_vs_KPi_BestMRec<" + Form("%f", DSTD_MREC_MAX) + ") & " +
+                            "(" + descriptor + "_vs_KPi_MMiss2>" + Form("%f", DSTDG_MMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_MMiss2<" + Form("%f", DSTDG_MMISS_MAX) + ")"
             },
             {
-                "DST0D0_pi", "(" + descriptor + "_vs_KPi_EMiss>" + Form("%f", SelectionConstants::OTHER_EMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_EMiss<" + Form("%f", SelectionConstants::OTHER_EMISS_MAX) + ") & " +
-                            "(" + descriptor + "_vs_KPi_BestMRec>" + Form("%f", SelectionConstants::DSTD_MREC_MIN) + ") & " + "(" + descriptor + "_vs_KPi_BestMRec<" + Form("%f", SelectionConstants::DSTD_MREC_MAX) + ") & " +
-                            "(" + descriptor + "_vs_KPi_MMiss2>" + Form("%f", SelectionConstants::DSTDPI_MMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_MMiss2<" + Form("%f", SelectionConstants::DSTDPI_MMISS_MAX) + ")"
+                "DST0D0_pi", "(" + descriptor + "_vs_KPi_EMiss>" + Form("%f", OTHER_EMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_EMiss<" + Form("%f", OTHER_EMISS_MAX) + ") & " +
+                            "(" + descriptor + "_vs_KPi_BestMRec>" + Form("%f", DSTD_MREC_MIN) + ") & " + "(" + descriptor + "_vs_KPi_BestMRec<" + Form("%f", DSTD_MREC_MAX) + ") & " +
+                            "(" + descriptor + "_vs_KPi_MMiss2>" + Form("%f", DSTDPI_MMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_MMiss2<" + Form("%f", DSTDPI_MMISS_MAX) + ")"
             },
             {
-              "DST0DST0_even", "(" + descriptor + "_vs_KPi_EMiss>" + Form("%f", SelectionConstants::OTHER_EMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_EMiss<" + Form("%f", SelectionConstants::OTHER_EMISS_MAX) + ") & " +
-                               "(" + descriptor + "_vs_KPi_BestMRec>" + Form("%f", SelectionConstants::DSTDST_MREC_MIN) + ") & " + "(" + descriptor + "_vs_KPi_BestMRec<" + Form("%f", SelectionConstants::DSTDST_MREC_MAX) + ") & " +
-                               "(slowestPion_p>" + Form("%f", SelectionConstants::DSTDST_SLOWPI_MIN) + ") & " + "(slowestPion_p<" + Form("%f", SelectionConstants::DSTDST_SLOWPI_MAX) + ") & " +
-                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_DSTMRec>" + Form("%f", SelectionConstants::DSTDST_DDG_MREC_MIN) + ") & " + "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_DSTMRec<" + Form("%f", SelectionConstants::DSTDST_DDG_MREC_MAX) + ") & " +
-                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_deltaM>" + Form("%f", SelectionConstants::DSTDST_DDG_DELTAM_MIN) + ") & " + "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_deltaM<" + Form("%f", SelectionConstants::DSTDST_DDG_DELTAM_MAX) + ") & " +
-                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_DSTMRec<" + Form("%f", SelectionConstants::BAD_DST_GRAD) + "*" + descriptor + "_vs_KPi_bestDSTDSTPhoton_deltaM + " + Form("%f", SelectionConstants::BAD_DST_YINT) + ") & " +
-                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_MM2>" + Form("%f", SelectionConstants::DSTDSTE_DDG_MMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_MM2<" + Form("%f", SelectionConstants::DSTDSTE_DDG_MMISS_MAX) + ")"
+              "DST0DST0_even", "(" + descriptor + "_vs_KPi_EMiss>" + Form("%f", OTHER_EMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_EMiss<" + Form("%f", OTHER_EMISS_MAX) + ") & " +
+                               "(" + descriptor + "_vs_KPi_BestMRec>" + Form("%f", DSTDST_MREC_MIN) + ") & " + "(" + descriptor + "_vs_KPi_BestMRec<" + Form("%f", DSTDST_MREC_MAX) + ") & " +
+                               "(slowestPion_p>" + Form("%f", DSTDST_SLOWPI_MIN) + ") & " + "(slowestPion_p<" + Form("%f", DSTDST_SLOWPI_MAX) + ") & " +
+                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_DSTMRec>" + Form("%f", DSTDST_DDG_MREC_MIN) + ") & " + "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_DSTMRec<" + Form("%f", DSTDST_DDG_MREC_MAX) + ") & " +
+                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_deltaM>" + Form("%f", DSTDST_DDG_DELTAM_MIN) + ") & " + "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_deltaM<" + Form("%f", DSTDST_DDG_DELTAM_MAX) + ") & " +
+                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_DSTMRec<" + Form("%f", BAD_DST_GRAD) + "*" + descriptor + "_vs_KPi_bestDSTDSTPhoton_deltaM + " + Form("%f", BAD_DST_YINT) + ") & " +
+                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_MM2>" + Form("%f", DSTDSTE_DDG_MMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_MM2<" + Form("%f", DSTDSTE_DDG_MMISS_MAX) + ")"
             },
             {
-              "DST0DST0_odd", "(" + descriptor + "_vs_KPi_EMiss>" + Form("%f", SelectionConstants::OTHER_EMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_EMiss<" + Form("%f", SelectionConstants::OTHER_EMISS_MAX) + ") & " +
-                               "(" + descriptor + "_vs_KPi_BestMRec>" + Form("%f", SelectionConstants::DSTDST_MREC_MIN) + ") & " + "(" + descriptor + "_vs_KPi_BestMRec<" + Form("%f", SelectionConstants::DSTDST_MREC_MAX) + ") & " +
-                               "(slowestPion_p>" + Form("%f", SelectionConstants::DSTDST_SLOWPI_MIN) + ") & " + "(slowestPion_p<" + Form("%f", SelectionConstants::DSTDST_SLOWPI_MAX) + ") & " +
-                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_DSTMRec>" + Form("%f", SelectionConstants::DSTDST_DDG_MREC_MIN) + ") & " + "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_DSTMRec<" + Form("%f", SelectionConstants::DSTDST_DDG_MREC_MAX) + ") & " +
-                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_deltaM>" + Form("%f", SelectionConstants::DSTDST_DDG_DELTAM_MIN) + ") & " + "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_deltaM<" + Form("%f", SelectionConstants::DSTDST_DDG_DELTAM_MAX) + ") & " +
-                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_DSTMRec<" + Form("%f", SelectionConstants::BAD_DST_GRAD) + "*" + descriptor + "_vs_KPi_bestDSTDSTPhoton_deltaM + " + Form("%f", SelectionConstants::BAD_DST_YINT) + ") & " +
-                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_MM2>" + Form("%f", SelectionConstants::DSTDSTO_DDG_MMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_MM2<" + Form("%f", SelectionConstants::DSTDSTO_DDG_MMISS_MAX) + ")"
+              "DST0DST0_odd", "(" + descriptor + "_vs_KPi_EMiss>" + Form("%f", OTHER_EMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_EMiss<" + Form("%f", OTHER_EMISS_MAX) + ") & " +
+                               "(" + descriptor + "_vs_KPi_BestMRec>" + Form("%f", DSTDST_MREC_MIN) + ") & " + "(" + descriptor + "_vs_KPi_BestMRec<" + Form("%f", DSTDST_MREC_MAX) + ") & " +
+                               "(slowestPion_p>" + Form("%f", DSTDST_SLOWPI_MIN) + ") & " + "(slowestPion_p<" + Form("%f", DSTDST_SLOWPI_MAX) + ") & " +
+                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_DSTMRec>" + Form("%f", DSTDST_DDG_MREC_MIN) + ") & " + "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_DSTMRec<" + Form("%f", DSTDST_DDG_MREC_MAX) + ") & " +
+                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_deltaM>" + Form("%f", DSTDST_DDG_DELTAM_MIN) + ") & " + "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_deltaM<" + Form("%f", DSTDST_DDG_DELTAM_MAX) + ") & " +
+                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_DSTMRec<" + Form("%f", BAD_DST_GRAD) + "*" + descriptor + "_vs_KPi_bestDSTDSTPhoton_deltaM + " + Form("%f", BAD_DST_YINT) + ") & " +
+                               "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_MM2>" + Form("%f", DSTDSTO_DDG_MMISS_MIN) + ") & " + "(" + descriptor + "_vs_KPi_bestDSTDSTPhoton_MM2<" + Form("%f", DSTDSTO_DDG_MMISS_MAX) + ")"
             }
         };
-
         return cuts[prod];
     }
 
-
-    TString GetTrueBinCut(int bin){
-        std::string binCut = "( (KPi_KCharge>0 & KSPiPi_vs_KPi_true_bin == " + std::to_string(bin) + ") | (KPi_KCharge<0 & KSPiPi_vs_KPi_true_bin == " + std::to_string(-1*bin) + ") )";
+    inline TString BinCut(int bin){
+        std::string binCut = "( (KPi_KCharge<0 & KSPiPi_vs_KPi_bin == " + std::to_string(bin) + ") | (KPi_KCharge>0 & KSPiPi_vs_KPi_bin == " + std::to_string(-1*bin) + ") )";
         return binCut.c_str();
     }
-
-    TString GetBinCut(int bin){
-        std::string binCut = "( (KPi_KCharge>0 & KSPiPi_vs_KPi_bin == " + std::to_string(bin) + ") | (KPi_KCharge<0 & KSPiPi_vs_KPi_bin == " + std::to_string(-1*bin) + ") )";
-        return binCut.c_str();
-    }
-
-private:
-    Settings _settings;
-    TString _tag;
-    TString _prod;
 
 };
 

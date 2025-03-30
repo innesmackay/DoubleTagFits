@@ -79,13 +79,13 @@ public:
     // void ScatterPlot(TString output, bool toy = false, TString ylabel = "");
 
     /** Plot a D decay projection */
-    void PlotProjection(RooPlot* frame, bool filled, int nbins);
+    void PlotProjection(RooPlot* frame, bool filled, int nbins, std::string cat_name = "");
 
     /** Plot the pulls */
     RooPlot* PlotPulls(RooPlot* f, RooRealVar* var);
 
     /** Make a filled composite plot */
-    void Plot(bool log, bool filled, bool pulls);
+    void Plot(bool log, bool filled, bool pulls, std::string cat_name = "");
 
     /** Mass scatter plot */
     void ScatterPlot(RooDataSet d, bool toy);

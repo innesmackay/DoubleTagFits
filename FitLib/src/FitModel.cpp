@@ -15,38 +15,54 @@ void FitModel::AddSignal(){
 
     if (m_debug) m_log.info("Adding the signal component");
 
-    // Create KDE
-    RooKeysPdf* kpi_kde = new RooKeysPdf(m_prename + "kpi_kde", "", *m_vars->m_kpi, *m_data->signal_mc, RooKeysPdf::MirrorBoth, 2);
-    RooKeysPdf* tag_kde = new RooKeysPdf(m_prename + "tag_kde", "", *m_vars->m_tag, *m_data->signal_mc, RooKeysPdf::MirrorBoth, 2);
+    // Check if default shape exists
+    if (!signal_shape){
 
-    // Smear
-    if (m_settings.getB("smear_signal")){
-        if (m_debug){ m_log.debug("Convolving the KDE with Gaussian"); }
-        RooRealVar* kpi_smear_width = new RooRealVar(m_prename + "kpi_smear_width", "", 0.003, 1e-4, 0.01);
-        RooRealVar* kpi_smear_mean = new RooRealVar(m_prename + "kpi_smear_mean", "", -0.001, -0.003, 0.003);
-        RooGaussian* kpi_smear = new RooGaussian(m_prename + "kpi_smear", "", *m_vars->m_kpi, *kpi_smear_mean, *kpi_smear_width);
-        kpi_signal_shape = new RooFFTConvPdf(m_prename + "kpi_signal_shape", "", *m_vars->m_kpi, *kpi_kde, *kpi_smear);
+        // Create KDE
+        RooKeysPdf* kpi_kde;
+        RooKeysPdf* tag_kde;
+        if (m_cat_name != ""){
+            RooDataSet* cat_ds = (RooDataSet*)m_data->signal_mc->reduce(("kspipi_catz==kspipi_catz::" + m_cat_name).c_str());
+            kpi_kde = new RooKeysPdf(m_prename + "kpi_kde", "", *m_vars->m_kpi, *cat_ds, RooKeysPdf::MirrorBoth, 2);
+            tag_kde = new RooKeysPdf(m_prename + "tag_kde", "", *m_vars->m_tag, *cat_ds, RooKeysPdf::MirrorBoth, 2);
+        }
+        else{
+            kpi_kde = new RooKeysPdf(m_prename + "kpi_kde", "", *m_vars->m_kpi, *m_data->signal_mc, RooKeysPdf::MirrorBoth, 2);
+            tag_kde = new RooKeysPdf(m_prename + "tag_kde", "", *m_vars->m_tag, *m_data->signal_mc, RooKeysPdf::MirrorBoth, 2);
+        }
+
+        // Smear
+        if (m_settings.getB("smear_signal")){
+            if (m_debug){ m_log.debug("Convolving the KDE with Gaussian"); }
+            RooRealVar* kpi_smear_width = new RooRealVar(m_prename + "kpi_smear_width", "", 0.003, 1e-4, 0.01);
+            RooRealVar* kpi_smear_mean = new RooRealVar(m_prename + "kpi_smear_mean", "", -0.001, -0.003, 0.003);
+            RooGaussian* kpi_smear = new RooGaussian(m_prename + "kpi_smear", "", *m_vars->m_kpi, *kpi_smear_mean, *kpi_smear_width);
+            kpi_signal_shape = new RooFFTConvPdf(m_prename + "kpi_signal_shape", "", *m_vars->m_kpi, *kpi_kde, *kpi_smear);
             
-        RooRealVar* tag_smear_width = new RooRealVar(m_prename + "tag_smear_width", "", 0.003, 1e-4, 0.01);
-        RooRealVar* tag_smear_mean = new RooRealVar(m_prename + "tag_smear_mean", "", -0.001, -0.003, 0.003);
-        RooGaussian* tag_smear = new RooGaussian(m_prename + "tag_smear", "", *m_vars->m_tag, *tag_smear_mean, *tag_smear_width);            
-        tag_signal_shape = new RooFFTConvPdf(m_prename + "tag_signal_shape", "", *m_vars->m_tag, *tag_kde, *tag_smear);
-    }
-    else{
-        kpi_signal_shape = kpi_kde;
-        tag_signal_shape = tag_kde;
-    }
+            RooRealVar* tag_smear_width = new RooRealVar(m_prename + "tag_smear_width", "", 0.003, 1e-4, 0.01);
+            RooRealVar* tag_smear_mean = new RooRealVar(m_prename + "tag_smear_mean", "", -0.001, -0.003, 0.003);
+            RooGaussian* tag_smear = new RooGaussian(m_prename + "tag_smear", "", *m_vars->m_tag, *tag_smear_mean, *tag_smear_width);            
+            tag_signal_shape = new RooFFTConvPdf(m_prename + "tag_signal_shape", "", *m_vars->m_tag, *tag_kde, *tag_smear);
+        }
+        else{
+            kpi_signal_shape = kpi_kde;
+            tag_signal_shape = tag_kde;
+        }
 
-    // Product
-    RooProdPdf* signal = new RooProdPdf(m_prename + "signal", "", *kpi_signal_shape, *tag_signal_shape);
-    component_pdfs.add(*signal);
+        // Product
+        signal_shape = new RooProdPdf(m_prename + "signal", "", *kpi_signal_shape, *tag_signal_shape);
+
+    }
+    component_pdfs.add(*signal_shape);
 
     // Yield
-    RooRealVar* n_signal = new RooRealVar(m_prename + "n_signal", "", 204, 10, 2800);
+    RooAbsReal* n_signal;
+    if (m_settings.key_exists("Yi_strategy")) n_signal = m_vars->Ni[m_settings.get("prod")][m_settings.getI("bin_number")];
+    else{ n_signal = new RooRealVar(m_prename + "n_signal", "", 100, 0, 2800); }
     component_yields.add(*n_signal);
 
     // Make struct
-    components["signal"].shape = signal;
+    components["signal"].shape = signal_shape;
     components["signal"].yield = n_signal;
 
     return;
@@ -58,29 +74,31 @@ void FitModel::AddKpiVsComb(){
     if (m_debug) m_log.info("Adding the KPi vs Comb. component");
 
     // Combinatorial shape
-    RooAbsPdf* comb_shape;
-    if (m_settings.getB("kde_bkgs")){
-        comb_shape = new RooKeysPdf(m_prename + "kpi_vs_comb_comb_shape", "", *m_vars->m_tag, *m_data->shapes["kpi_vs_comb"], RooKeysPdf::MirrorBoth, 2 );
-    }
-    else if (m_settings.getB("expo_bkgs")){
-        RooRealVar* exponent = new RooRealVar(m_prename + "kpi_vs_comb_exponent", "", -4, -50, 4);
-        comb_shape = new RooExponential(m_prename + "kpi_vs_comb_comb_shape", "", *m_vars->m_tag, *exponent);
-    }
-    else{
-        RooRealVar* exponent = new RooRealVar(m_prename + "kpi_vs_comb_exponent", "", -0.4, -1.0, 0.2);
-        comb_shape = new RooChebychev(m_prename + "kpi_vs_comb_comb_shape", "", *m_vars->m_tag, *exponent);
-    }
+    if (!kpi_vs_comb_shape){
+        RooAbsPdf* kpi_vs_comb_comb_shape;
+        if (m_settings.getB("kde_bkgs")){
+            kpi_vs_comb_comb_shape = new RooKeysPdf(m_prename + "kpi_vs_comb_comb_shape", "", *m_vars->m_tag, *m_data->shapes["kpi_vs_comb"], RooKeysPdf::MirrorBoth, 2 );
+        }
+        else if (m_settings.getB("expo_bkgs")){
+            RooRealVar* exponent = new RooRealVar(m_prename + "kpi_vs_comb_exponent", "", -4, -50, 4);
+            kpi_vs_comb_comb_shape = new RooExponential(m_prename + "kpi_vs_comb_comb_shape", "", *m_vars->m_tag, *exponent);
+        }
+        else{
+            RooRealVar* exponent = new RooRealVar(m_prename + "kpi_vs_comb_exponent", "", -0.4, -1.0, 0.2);
+            kpi_vs_comb_comb_shape = new RooChebychev(m_prename + "kpi_vs_comb_comb_shape", "", *m_vars->m_tag, *exponent);
+        }
 
-    // Product
-    RooProdPdf* kpi_vs_comb = new RooProdPdf(m_prename + "kpi_vs_comb", "", *kpi_signal_shape, *comb_shape);
-    component_pdfs.add(*kpi_vs_comb);
+        // Product
+        kpi_vs_comb_shape = new RooProdPdf(m_prename + "kpi_vs_comb", "", *kpi_signal_shape, *kpi_vs_comb_comb_shape);
+    }    
+    component_pdfs.add(*kpi_vs_comb_shape);
 
     // Yield
-    RooRealVar* n_kpi_vs_comb = new RooRealVar(m_prename + "n_kpi_vs_comb", "", 50, 0, 500);
+    RooRealVar* n_kpi_vs_comb = new RooRealVar(m_prename + "n_kpi_vs_comb", "", 5, 0, 100);
     component_yields.add(*n_kpi_vs_comb);
 
     // Make struct
-    components["kpi_vs_comb"].shape = kpi_vs_comb;
+    components["kpi_vs_comb"].shape = kpi_vs_comb_shape;
     components["kpi_vs_comb"].yield = n_kpi_vs_comb;
 
     return;
@@ -92,29 +110,31 @@ void FitModel::AddCombVsTag(){
     if (m_debug) m_log.info("Adding the Comb. vs tag component");
 
     // Combinatorial shape
-    RooAbsPdf* comb_shape;
-    if (m_settings.getB("kde_bkgs")){
-        comb_shape = new RooKeysPdf(m_prename + "comb_vs_tag_comb_shape", "", *m_vars->m_kpi, *m_data->shapes["comb_vs_tag"], RooKeysPdf::MirrorBoth, 2 );
-    }
-    else if (m_settings.getB("expo_bkgs")){
-        RooRealVar* exponent = new RooRealVar(m_prename + "comb_vs_tag_exponent", "", -4, -50, 4);
-        comb_shape = new RooExponential(m_prename + "comb_vs_tag_comb_shape", "", *m_vars->m_kpi, *exponent);
-    }
-    else{
-        RooRealVar* exponent = new RooRealVar(m_prename + "comb_vs_tag_exponent", "", -0.4, -1.0, 0.2);
-        comb_shape = new RooChebychev(m_prename + "comb_vs_tag_comb_shape", "", *m_vars->m_kpi, *exponent);
+    if (!comb_vs_tag_shape){
+        RooAbsPdf* comb_vs_tag_comb_shape;
+        if (m_settings.getB("kde_bkgs")){
+            comb_vs_tag_comb_shape = new RooKeysPdf(m_prename + "comb_vs_tag_comb_shape", "", *m_vars->m_kpi, *m_data->shapes["comb_vs_tag"], RooKeysPdf::MirrorBoth, 2 );
+        }
+        else if (m_settings.getB("expo_bkgs")){
+            RooRealVar* exponent = new RooRealVar(m_prename + "comb_vs_tag_exponent", "", -4, -50, 4);
+            comb_vs_tag_comb_shape = new RooExponential(m_prename + "comb_vs_tag_comb_shape", "", *m_vars->m_kpi, *exponent);
+        }
+        else{
+            RooRealVar* exponent = new RooRealVar(m_prename + "comb_vs_tag_exponent", "", -0.4, -1.0, 0.2);
+            comb_vs_tag_comb_shape = new RooChebychev(m_prename + "comb_vs_tag_comb_shape", "", *m_vars->m_kpi, *exponent);
+        }
+        // Product
+        comb_vs_tag_shape = new RooProdPdf(m_prename + "comb_vs_tag", "", *comb_vs_tag_comb_shape, *tag_signal_shape);
     }
 
-    // Product
-    RooProdPdf* comb_vs_tag = new RooProdPdf(m_prename + "comb_vs_tag", "", *comb_shape, *tag_signal_shape);
-    component_pdfs.add(*comb_vs_tag);
+    component_pdfs.add(*comb_vs_tag_shape);
 
     // Yield
-    RooRealVar* n_comb_vs_tag = new RooRealVar(m_prename + "n_comb_vs_tag", "", 50, 0, 500);
+    RooRealVar* n_comb_vs_tag = new RooRealVar(m_prename + "n_comb_vs_tag", "", 5, 0, 100);
     component_yields.add(*n_comb_vs_tag);
 
     // Make struct
-    components["comb_vs_tag"].shape = comb_vs_tag;
+    components["comb_vs_tag"].shape = comb_vs_tag_shape;
     components["comb_vs_tag"].yield = n_comb_vs_tag;
 
     return;
@@ -160,7 +180,7 @@ void FitModel::AddComb(){
     component_pdfs.add(*qqbar);
 
     // Yield
-    RooRealVar* n_qqbar = new RooRealVar(m_prename + "n_flat_qqbar", "", 300, 0., 5000);
+    RooRealVar* n_qqbar = new RooRealVar(m_prename + "n_flat_qqbar", "", 25, 0., 5000);
     component_yields.add(*n_qqbar);
     
     // Make struct
@@ -206,12 +226,14 @@ void FitModel::AddCorrelatedQQBar(){
     if (m_debug) m_log.info("Adding correlated qqbar component");
 
     // Shape
-    double starting_mean = 3.92;
-    if (m_settings.key_exists("starting_qqbar_mean")) starting_mean = m_settings.getD("starting_qqbar_mean");
-    RooRealVar* qqbar_sigma = new RooRealVar(m_prename + "qqbar_sigma","", 0.015, 0., 0.180);
-    RooRealVar* qqbar_mean = new RooRealVar(m_prename + "qqbar_mean","", starting_mean, 3.30, 4.20);
-    RooAbsPdf* qqbar = new RooGenericPdf(m_prename + "correlated_qqbar", "exp(-0.5*pow(((@0+@1)-@3)/@2, 2))", RooArgSet(*m_vars->m_kpi, *m_vars->m_tag, *qqbar_sigma, *qqbar_mean));
-    component_pdfs.add(*qqbar);
+    if (!qqbar_shape){
+        double starting_mean = 3.92;
+        if (m_settings.key_exists("starting_qqbar_mean")) starting_mean = m_settings.getD("starting_qqbar_mean");
+        RooRealVar* qqbar_sigma = new RooRealVar(m_prename + "qqbar_sigma","", 0.015, 0., 0.180);
+        RooRealVar* qqbar_mean = new RooRealVar(m_prename + "qqbar_mean","", starting_mean, 3.30, 4.20);
+        qqbar_shape = new RooGenericPdf(m_prename + "correlated_qqbar", "exp(-0.5*pow(((@0+@1)-@3)/@2, 2))", RooArgSet(*m_vars->m_kpi, *m_vars->m_tag, *qqbar_sigma, *qqbar_mean));
+    }
+    component_pdfs.add(*qqbar_shape);
 
     // RooRealVar qqbar_sigma_r(m_prename + "qqbar_sigma_r","", 0.015, 0., 0.180);
     // RooRealVar qqbar_alpha("qqbar_alpha","", 0.04, 0, 5);
@@ -238,7 +260,7 @@ void FitModel::AddCorrelatedQQBar(){
     component_yields.add(*n_qqbar);
 
     // Make struct
-    components["correlated_qqbar"].shape = qqbar;
+    components["correlated_qqbar"].shape = qqbar_shape;
     components["correlated_qqbar"].yield = n_qqbar;
 
     return;
@@ -281,26 +303,54 @@ void FitModel::AddKPiVsKPiComponent(){
     return;
 }
 
-void FitModel::SetFreePars(Settings fitResults){
-    m_log.info(("Fixing the parameters using results from " + fitResults.getFilename()).c_str());
-    RooArgSet* allpars = m_pdf->getParameters(RooArgSet(*m_sigm, *m_tagm));
-    TIterator* iter(allpars->createIterator());
-    for (TObject *a = iter->Next(); a != 0; a = iter->Next()) {
-        RooRealVar *p = (RooRealVar*) a;
-        TString name = p->GetName();
-        std::string std_string_name = std::string(name);
-        if (m_debug){
-            m_log.debug(("Setting " + std_string_name + " to " + fitResults.get(std_string_name)).c_str() );
-        }
-        p->setVal(fitResults.getD(std_string_name));
-    }
+*/
+
+
+void FitModel::AddDSTpDSTm(){
+
+    if (m_debug) m_log.info("Adding the D*+D*- component");
+    Settings dstpsdstm_yields("inputs/DSTpDSTm.txt");
+    dstpsdstm_yields.read();
+
+    // Yield
+    RooRealVar* n_dstpdstm = new RooRealVar(m_prename + "n_dstpdstm", "", dstpsdstm_yields.getD(m_settings.get("cat_label")));
+    n_dstpdstm->setConstant(true);
+    component_yields.add(*n_dstpdstm);
+    component_pdfs.add(*signal_shape);
+
+    // Make struct
+    components["dstpdstm"].shape = signal_shape;
+    components["dstpdstm"].yield = n_dstpdstm;
+
     return;
 }
 
 
-void FitModel::ResetPDF(){
-    RooAddPdf* pdf;
-    m_pdf = pdf;
-    this->InitialiseFitModel();
+
+void FitModel::AddDSTpDm(){
+
+    if (m_debug) m_log.info("Adding the D*+D- component");
+
+    // Load shape
+    if (!dstpdm_shape){
+        auto dstpdm_data = m_data->LoadMCSample("DSTpDm_combined_5x", true, true, 1./5);
+        RooDataSet* reduced_dstpdm_data = (RooDataSet*) dstpdm_data->reduce("((KSPiPi_vs_KPi_mPlus>1.55) || (KSPiPi_vs_KPi_mMinus>1.55)) & (KSPiPi_mInv<2)");
+        RooKeysPdf* dstpdm_kde_shape = new RooKeysPdf("shared_dstpdm_shape", "", *m_vars->m_tag, *reduced_dstpdm_data, RooKeysPdf::MirrorBoth, 2);
+        delete reduced_dstpdm_data;
+        dstpdm_shape = new RooProdPdf("dstpdm_shape", "", *kpi_signal_shape, *dstpdm_kde_shape);
+    }
+
+    // Yield
+    Settings dstpdm_yields("inputs/DSTpDm.txt");
+    dstpdm_yields.read();
+    RooRealVar* n_dstpdm = new RooRealVar(m_prename + "n_dstpdm", "", dstpdm_yields.getD(m_settings.get("cat_label")));
+    n_dstpdm->setConstant(true);
+    component_yields.add(*n_dstpdm);
+    component_pdfs.add(*dstpdm_shape);
+
+    // Make struct
+    components["dstpdm"].shape = dstpdm_shape;
+    components["dstpdm"].yield = n_dstpdm;
+
+    return;
 }
-*/

@@ -1,0 +1,5 @@
+smear_signal true
+expo_bkgs true
+kpi_expo_qqbar true
+tag_expo_qqbar true
+components settings/components/KSPiPi_DST0D0_g.txt

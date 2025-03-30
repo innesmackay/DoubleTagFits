@@ -16,7 +16,7 @@ sampling_frac 0.5
 weight_mc true
 
 * FIT
-components new_settings/components/KK_D0D0.txt
+components settings/components/KK_D0D0.txt
 smear_signal xtrue
 kde_bkgs true
 kpi_expo_qqbar true

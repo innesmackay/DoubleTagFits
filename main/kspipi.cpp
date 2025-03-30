@@ -2,8 +2,8 @@
 #include "Log.hpp"
 #include "Variables.hpp"
 #include "Data.hpp"
-#include "FitModel.hpp"
-#include "Fitter.hpp"
+#include "BinnedFitModel.hpp"
+#include "BinnedFitter.hpp"
 #include "Plotter.hpp"
 
 /**
@@ -14,7 +14,7 @@
 */
 void PrintWelcome(Log log, TString tag, TString prod){
     log.empty();
-    log.success("Welcome to the CP tag fit");
+    log.success("Welcome to the KSpipi tag fit");
     log.success("Tag: " + tag);
     log.success("Production mechanism: " + prod);
     log.empty();
@@ -54,26 +54,26 @@ int main(int argc , char* argv[]){
     // ===================================
     // Load the fit model
     // ===================================
-    FitModel* fm = new FitModel(*set, vars, dt, m_debug);
-    fm->ReadComponents();
+    BinnedFitModel* fm = new BinnedFitModel(*set, vars, dt, m_debug);
     fm->MakePDF();
 
     // ===================================
     // Run the fit
     // ===================================
-    Fitter* ft = new Fitter(*set, vars, fm, dt, m_debug);
+    BinnedFitter* ft = new BinnedFitter(*set, vars, fm, dt, m_debug);
     ft->RunFit();
     ft->SaveOutput();
 
     // ===================================
     // Plot the fit and scatter
     // ===================================
-    Plotter* pt = new Plotter(*set, vars, dt, fm, m_debug);
-    pt->Plot(false, false, set->getB("pulls"));
-    pt->Plot(false, true, set->getB("pulls"));
-    RooDataSet* toy_data = fm->pdf->generate(RooArgList(*vars->m_kpi, *vars->m_tag), 5 * dt->data->numEntries());
-    pt->ScatterPlot(*dt->data, false);
-    pt->ScatterPlot(*toy_data, true);
-
+    for (auto category: fm->category_models){
+        set->update_value("prename", category.first);
+        Plotter* pt = new Plotter(*set, vars, dt, category.second, m_debug);
+        pt->Plot(false, false, set->getB("pulls"), category.first);
+        pt->Plot(false, true, set->getB("pulls"), category.first);
+        //RooDataSet* toy_data = fm->pdf->generate(RooArgList(*vars->m_kpi, *vars->m_tag), 5 * dt->data->numEntries());
+        //pt->ScatterPlot(*dt->data, false);
+        //pt->ScatterPlot(*toy_data, true);
+    }
 }
-

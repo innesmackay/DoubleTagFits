@@ -20,6 +20,7 @@ add_library(FitLib STATIC
 ### Add main fitting code ###
 SET (COMB_MACS
     cptags
+    kspipi
 )
 
 foreach( mac ${COMB_MACS} )
