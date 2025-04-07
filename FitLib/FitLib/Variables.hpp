@@ -244,8 +244,10 @@ public:
 
         // Fixed constants
         xD = new RooRealVar("xD", "", Inputs::XMIX);
+        if (s.key_exists("alt_xmix_val")) xD->setVal(s.getD("alt_xmix_val"));
         xD->setConstant(true);
         yD = new RooRealVar("yD", "", Inputs::YMIX);
+        if (s.key_exists("alt_ymix_val")) yD->setVal(s.getD("alt_ymix_val"));
         yD->setConstant(true);
 
         // KSpipi observables

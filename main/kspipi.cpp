@@ -60,6 +60,7 @@ int main(int argc , char* argv[]){
     // ===================================
     // Run the fit
     // ===================================
+    set->update_value("prename", prename.Data());
     BinnedFitter* ft = new BinnedFitter(*set, vars, fm, dt, m_debug);
     ft->RunFit();
     ft->SaveOutput();
@@ -67,13 +68,15 @@ int main(int argc , char* argv[]){
     // ===================================
     // Plot the fit and scatter
     // ===================================
-    for (auto category: fm->category_models){
-        set->update_value("prename", category.first);
-        Plotter* pt = new Plotter(*set, vars, dt, category.second, m_debug);
-        pt->Plot(false, false, set->getB("pulls"), category.first);
-        pt->Plot(false, true, set->getB("pulls"), category.first);
-        //RooDataSet* toy_data = fm->pdf->generate(RooArgList(*vars->m_kpi, *vars->m_tag), 5 * dt->data->numEntries());
-        //pt->ScatterPlot(*dt->data, false);
-        //pt->ScatterPlot(*toy_data, true);
+    if (set->getB("plot")){
+        for (auto category: fm->category_models){
+            set->update_value("prename", category.first);
+            Plotter* pt = new Plotter(*set, vars, dt, category.second, m_debug);
+            pt->Plot(false, false, set->getB("pulls"), category.first);
+            pt->Plot(false, true, set->getB("pulls"), category.first);
+            //RooDataSet* toy_data = fm->pdf->generate(RooArgList(*vars->m_kpi, *vars->m_tag), 5 * dt->data->numEntries());
+            //pt->ScatterPlot(*dt->data, false);
+            //pt->ScatterPlot(*toy_data, true);
+        }
     }
 }

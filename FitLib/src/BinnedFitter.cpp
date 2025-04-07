@@ -102,8 +102,10 @@ void BinnedFitter::SaveOutput(){
 
     // Open the outfile
     std::string prename = "";
+    std::string outdir = "output/" + m_settings.get("tag") + "/" + m_settings.get("prod");
     if (m_settings.key_exists("prename")) prename = m_settings.get("prename");
-    std::string outfile_name = "output/" + m_settings.get("tag") + "/" + m_settings.get("prod") + "/" + prename + "fit_results.txt";
+    if (m_settings.key_exists("outdir")) outdir = m_settings.get("outdir");
+    std::string outfile_name = outdir + "/" + prename + "fit_results.txt";
     m_log.info("Writing output to " + outfile_name);
     std::ofstream m_outfile;
     m_outfile.open(outfile_name);
