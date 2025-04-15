@@ -1,6 +1,6 @@
 ### Define project details ###
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-project(CoherenceFit)
+project(DoubleTagFits)
 
 ### Add ROOT stuff ###
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})

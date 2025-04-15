@@ -190,7 +190,7 @@ public:
 
         tag_is_kpipiz = new RooRealVar(tag + "_vs_KPi_isKPiPi0", "", -2., 2.);
 
-        pipipiz_is_kpi = new RooRealVar("PiPiPi0_vs_KPi_isKPi", "", -2., 2.);
+        pipipiz_is_kpi = new RooRealVar("PiPiPi0_vs_KPi_isKPiOtherPi0", "", -2., 2.);
         pipipiz_is_kspiz = new RooRealVar("PiPiPi0_vs_KPi_isKSPi0", "", -2., 2.);
 
         kspiz_is_pipipiz = new RooRealVar("KSPi0_vs_KPi_isPiPiPi0", "", -2., 2.);

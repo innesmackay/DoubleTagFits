@@ -140,7 +140,7 @@ void Plotter::PlotProjection(RooPlot* frame, bool filled, int nbins, std::string
     d->plotOn(frame, RooFit::LineColor(kBlack), RooFit::Name("Data"), RooFit::Binning(nbins));    
     m_fm->pdf->plotOn(frame, RooFit::LineColor(kRed), RooFit::Name("Fit"), RooFit::LineWidth(1));
     d->plotOn(frame, RooFit::LineColor(kBlack), RooFit::Name("Data"), RooFit::Binning(nbins)); 
-    delete d;
+    if (cat_name != "") delete d;
 
     return;
 
@@ -194,6 +194,7 @@ void Plotter::Plot(bool log, bool filled, bool pulls, std::string cat_name){
     kpi_plot_pad.cd();
     PlotProjection(kpi_frame, filled, nbins, cat_name);
     kpi_frame->Draw();
+    m_log.info("Plotting data and PDF on tag frame");
     tag_plot_pad.cd();
     PlotProjection(tag_frame, filled, nbins, cat_name);
     tag_frame->Draw();

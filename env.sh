@@ -6,7 +6,7 @@ ANALYSIS_NAME="DOUBLE_TAG_FITS"
 user=$(whoami)
 
 # General Library paths
-export BASE_PATH=/home/${user}/DoubleTagFits/
+export BASE_PATH=/data/lhcb/users/${user}/DeltaKpi/DoubleTagFits/
 
 # Check if conda is installed
 # make noise if not
