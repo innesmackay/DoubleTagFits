@@ -96,7 +96,7 @@ public:
             else if (c.first == "correlated_qqbar") AddCorrelatedQQBar();
             else if (c.first == "dstpdstm") AddDSTpDSTm();
             else if (c.first == "dstpdm") AddDSTpDm();
-            //else if (c.first == "kpi_vs_kpi") AddKPiVsKPiComponent();
+            else if (c.first == "kpi_vs_kpi") AddKPiVsKPi();
         }
         pdf = std::make_unique<RooAddPdf>(m_prename + "pdf", "", component_pdfs, component_yields);
         if (m_debug) m_log.success("PDF made!");
@@ -114,7 +114,7 @@ public:
     void AddCorrelatedQQBar();
     void AddDSTpDSTm();
     void AddDSTpDm();
-    // void AddKPiVsKPiComponent();
+    void AddKPiVsKPi();
 
     /**
      * Parameters shared between DP bins

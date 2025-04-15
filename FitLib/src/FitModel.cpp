@@ -94,7 +94,7 @@ void FitModel::AddKpiVsComb(){
     component_pdfs.add(*kpi_vs_comb_shape);
 
     // Yield
-    RooRealVar* n_kpi_vs_comb = new RooRealVar(m_prename + "n_kpi_vs_comb", "", 5, 0, 100);
+    RooRealVar* n_kpi_vs_comb = new RooRealVar(m_prename + "n_kpi_vs_comb", "", 5, 0, 300);
     component_yields.add(*n_kpi_vs_comb);
 
     // Make struct
@@ -130,7 +130,7 @@ void FitModel::AddCombVsTag(){
     component_pdfs.add(*comb_vs_tag_shape);
 
     // Yield
-    RooRealVar* n_comb_vs_tag = new RooRealVar(m_prename + "n_comb_vs_tag", "", 5, 0, 100);
+    RooRealVar* n_comb_vs_tag = new RooRealVar(m_prename + "n_comb_vs_tag", "", 5, 0, 300);
     component_yields.add(*n_comb_vs_tag);
 
     // Make struct
@@ -209,7 +209,7 @@ void FitModel::AddKPiVsKPiPi0(){
         n_kpi_vs_kpipiz = new RooFormulaVar(m_prename + "n_kpi_vs_kpipi0", "@0 * @1", RooArgList(*kpi_vs_kpipiz_rate, *components["signal"].yield));
     }
     else{
-        n_kpi_vs_kpipiz = new RooRealVar(m_prename + "n_kpi_vs_kpipi0", "", 75, 0, 500);
+        n_kpi_vs_kpipiz = new RooRealVar(m_prename + "n_kpi_vs_kpipi0", "", 120, 0, 500);
     }
     component_yields.add(*n_kpi_vs_kpipiz);
 
@@ -267,43 +267,35 @@ void FitModel::AddCorrelatedQQBar(){
 }
 
 
-/*
-void FitModel::AddKPiVsKPiComponent(){
+
+void FitModel::AddKPiVsKPi(){
 
     m_log.info("Adding the KPi vs KPi component");
 
     // Shape
-    RooKeysPdf* kpi_vs_kpi_kpi_shape = new RooKeysPdf(m_prename + "kpi_vs_kpi_kpi_kde", "", *m_tagm, *m_datasets["kpi_vs_kpi"], RooKeysPdf::MirrorBoth, 2 );
-    //RooAbsPdf* kpi_vs_kpi_kpi_shape;
-    //if (m_settings.getB("smear")){
-    //    if (m_debug){ m_log.debug("Smearing the Kpi vs. Kpi component with the Kpi smearing function"); }
-    //    kpi_vs_kpi_kpi_shape = new RooFFTConvPdf(m_prename + "kpi_vs_kpi_kpi_shape", "", *m_tagm, *kpi_vs_kpi_kpi_kde, *m_sig_smear);
-    //}
-    //else{
-    //    kpi_vs_kpi_kpi_shape = kpi_vs_kpi_kpi_kde;
-    //}
-    RooProdPdf* kpi_vs_kpi = new RooProdPdf(m_prename + "kpi_vs_kpi", "", *m_signal_kpi, *kpi_vs_kpi_kpi_shape);
-    m_component_pdfs.add(*kpi_vs_kpi);
+    RooKeysPdf* kpi_shape = new RooKeysPdf(m_prename + "kpi_bkg_kde", "", *m_vars->m_tag, *m_data->shapes["kpi_vs_kpi"], RooKeysPdf::MirrorBoth, 2 );
+    RooProdPdf* kpi_vs_kpi = new RooProdPdf(m_prename + "kpi_vs_kpi", "", *kpi_signal_shape, *kpi_shape);
+    component_pdfs.add(*kpi_vs_kpi);
 
     // Yield
+    RooAbsReal* n_kpi_vs_kpi;
     if (m_settings.key_exists("kpi_vs_kpi_rate")){
         if (m_debug){ m_log.debug(("Fixing the Kpi vs Kpi yield to be " + std::to_string(m_settings.getD("kpi_vs_kpi_rate")) + " of the signal yield").c_str()); }
         RooRealVar* kpi_vs_kpi_rate = new RooRealVar(m_prename + "kpi_vs_kpi_rate", "", m_settings.getD("kpi_vs_kpi_rate"));
         kpi_vs_kpi_rate->setConstant();
-        RooRealVar* n_signal = (RooRealVar*) m_yields.find(m_prename + "n_signal");
-        RooFormulaVar* n_kpi_vs_kpi = new RooFormulaVar(m_prename + "n_kpi_vs_kpi", "@0 * @1", RooArgList(*kpi_vs_kpi_rate, *n_signal));
-        m_yields.add(*n_kpi_vs_kpi);
+        n_kpi_vs_kpi = new RooFormulaVar(m_prename + "n_kpi_vs_kpi", "@0 * @1", RooArgList(*kpi_vs_kpi_rate, *components["signal"].yield));
     }
     else{
-        if (m_debug){ m_log.debug("Allowing the Kpi vs Kpi yield to be free"); }
-        RooRealVar* n_kpi_vs_kpi = new RooRealVar(m_prename + "n_kpi_vs_kpi", "", 75, 0, 500);
-        m_yields.add(*n_kpi_vs_kpi);
-        n_kpi_vs_kpi->setError(0.5);
+        n_kpi_vs_kpi = new RooRealVar(m_prename + "n_kpi_vs_kpi", "", 120, 0, 500);
     }
+    component_yields.add(*n_kpi_vs_kpi);
+
+    // Make struct
+    components["kpi_vs_kpi"].shape = kpi_vs_kpi;
+    components["kpi_vs_kpi"].yield = n_kpi_vs_kpi;
+
     return;
 }
-
-*/
 
 
 void FitModel::AddDSTpDSTm(){
