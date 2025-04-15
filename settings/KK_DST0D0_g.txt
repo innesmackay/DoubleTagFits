@@ -1,7 +1,7 @@
 * INITIAL
 tag KK
 signal KPi
-prod D0D0
+prod DST0D0_g
 debug true
 
 * RANGE
@@ -16,7 +16,7 @@ sampling_frac 0.5
 weight_mc true
 
 * FIT
-components settings/components/KK_D0D0.txt
+components settings/components/KK_DST0D0_g.txt
 smear_signal true
 kde_bkgs true
 kpi_expo_qqbar true

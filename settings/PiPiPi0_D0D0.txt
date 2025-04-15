@@ -1,12 +1,12 @@
 * INITIAL
-tag KK
+tag PiPiPi0
 signal KPi
 prod D0D0
 debug true
 
 * RANGE
 m_tag_low 1.70
-m_tag_high 1.92
+m_tag_high 2.06
 m_sig_low 1.73
 m_sig_high 2.06
 
@@ -16,14 +16,11 @@ sampling_frac 0.5
 weight_mc true
 
 * FIT
-components settings/components/KK_D0D0.txt
+components settings/components/PiPiPi0_D0D0.txt
 smear_signal true
 kde_bkgs true
 kpi_expo_qqbar true
 tag_expo_qqbar true
-
-* starting_qqbar_mean 3.8
-* kpi_vs_kpipi0_rate 0.525
 
 * PLOT
 nbins 40
