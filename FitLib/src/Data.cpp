@@ -120,5 +120,42 @@ void Data::TruthMatchComponents(){
         shapes["comb_vs_tag"] = std::unique_ptr<RooDataSet>(static_cast<RooDataSet*>(bkg_mc->reduce(comb_vs_tag_cut)));
         shapes["kpi_vs_kpipi0"] = std::unique_ptr<RooDataSet>(static_cast<RooDataSet*>(bkg_mc->reduce(kpi_vs_kpipiz_cut)));
     }
-
+    else if (m_tag == "PiPi"){
+        TString kpi_vs_comb_cut = "((KPi_isPiK==1 || KPi_isTrue==1) && PiPi_vs_KPi_isTrue==0)";
+        TString comb_vs_tag_cut = "(KPi_isPiK==0 && KPi_isTrue==0 && PiPi_vs_KPi_isTrue==1)";
+        TString kpi_vs_kpi_cut = "";
+        if (std::find(component_list.begin(), component_list.end(), "kpi_vs_kpi") != component_list.end()) {
+            kpi_vs_kpi_cut = "( (KPi_isPiK==1 || KPi_isTrue==1) && PiPi_vs_KPi_isKPi==1 )";
+            kpi_vs_comb_cut = "((KPi_isPiK==1 || KPi_isTrue==1) && PiPi_vs_KPi_isTrue==0 && PiPi_vs_KPi_isKPiPi0==0 )";
+        }
+        shapes["kpi_vs_comb"] = std::unique_ptr<RooDataSet>(static_cast<RooDataSet*>(bkg_mc->reduce(kpi_vs_comb_cut)));
+        shapes["comb_vs_tag"] = std::unique_ptr<RooDataSet>(static_cast<RooDataSet*>(bkg_mc->reduce(comb_vs_tag_cut)));
+        if (kpi_vs_kpi_cut != "") shapes["kpi_vs_kpi"] = std::unique_ptr<RooDataSet>(static_cast<RooDataSet*>(bkg_mc->reduce(kpi_vs_kpi_cut)));
+    }
+    else if (m_tag == "PiPiPi0"){
+        TString kpi_vs_comb_cut = "((KPi_isPiK==1 || KPi_isTrue==1) && PiPiPi0_vs_KPi_isTrue==0 && PiPiPi0_vs_KPi_isKSPi0==0)";
+        TString comb_vs_tag_cut = "(KPi_isPiK==0 && KPi_isTrue==0 && (PiPiPi0_vs_KPi_isTrue==1 || PiPiPi0_vs_KPi_isKSPi0==1))";
+        TString kpi_vs_kpipi0_cut = "";
+        TString kpi_vs_kpi_cut = "";
+        bool incl_kpi_vs_kpipi0 = false;
+        bool incl_kpi_vs_kpi = false;
+        if (std::find(component_list.begin(), component_list.end(), "kpi_vs_kpi") != component_list.end()) incl_kpi_vs_kpi = true;
+        if (std::find(component_list.begin(), component_list.end(), "kpi_vs_kpipi0") != component_list.end()) incl_kpi_vs_kpipi0 = true;
+        if (incl_kpi_vs_kpipi0) kpi_vs_kpipi0_cut = "( (KPi_isPiK==1 || KPi_isTrue==1) && PiPiPi0_vs_KPi_isKPiPi0==1 )";
+        if (incl_kpi_vs_kpi) kpi_vs_kpi_cut = "( (KPi_isPiK==1 || KPi_isTrue==1) && PiPiPi0_vs_KPi_isKPiOtherPi0==1 )";
+        if (incl_kpi_vs_kpi && incl_kpi_vs_kpipi0) kpi_vs_comb_cut = "((KPi_isPiK==1 || KPi_isTrue==1) && PiPiPi0_vs_KPi_isTrue==0 && PiPiPi0_vs_KPi_isKSPi0==0 && PiPiPi0_vs_KPi_isKPiPi0==0 && PiPiPi0_vs_KPi_isKPiOtherPi0==0)";
+        else if (incl_kpi_vs_kpi & !incl_kpi_vs_kpipi0) kpi_vs_comb_cut = "((KPi_isPiK==1 || KPi_isTrue==1) && PiPiPi0_vs_KPi_isTrue==0 && PiPiPi0_vs_KPi_isKSPi0==0 && PiPiPi0_vs_KPi_isKPiOtherPi0==0)";
+        else if (!incl_kpi_vs_kpi & incl_kpi_vs_kpipi0) kpi_vs_comb_cut = "((KPi_isPiK==1 || KPi_isTrue==1) && PiPiPi0_vs_KPi_isTrue==0 && PiPiPi0_vs_KPi_isKSPi0==0 && PiPiPi0_vs_KPi_isKPiPi0==0)";
+        shapes["kpi_vs_comb"] = std::unique_ptr<RooDataSet>(static_cast<RooDataSet*>(bkg_mc->reduce(kpi_vs_comb_cut)));
+        shapes["comb_vs_tag"] = std::unique_ptr<RooDataSet>(static_cast<RooDataSet*>(bkg_mc->reduce(comb_vs_tag_cut)));
+        if (kpi_vs_kpi_cut != "") shapes["kpi_vs_kpi"] = std::unique_ptr<RooDataSet>(static_cast<RooDataSet*>(bkg_mc->reduce(kpi_vs_kpi_cut)));
+        if (kpi_vs_kpipi0_cut != "") shapes["kpi_vs_kpipi0"] = std::unique_ptr<RooDataSet>(static_cast<RooDataSet*>(bkg_mc->reduce(kpi_vs_kpipi0_cut)));
+    }
+    else if (m_tag == "KSPi0"){
+        TString kpi_vs_comb_cut = "((KPi_isPiK==1 || KPi_isTrue==1) && KSPi0_vs_KPi_isTrue==0 && KSPi0_vs_KPi_isPiPiPi0==0)";
+        TString comb_vs_tag_cut = "(KPi_isPiK==0 && KPi_isTrue==0 && (KSPi0_vs_KPi_isTrue==1 || KSPi0_vs_KPi_isPiPiPi0==1))";
+        shapes["kpi_vs_comb"] = std::unique_ptr<RooDataSet>(static_cast<RooDataSet*>(bkg_mc->reduce(kpi_vs_comb_cut)));
+        shapes["comb_vs_tag"] = std::unique_ptr<RooDataSet>(static_cast<RooDataSet*>(bkg_mc->reduce(comb_vs_tag_cut)));
+    }
+    return;
 }
